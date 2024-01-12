@@ -1,12 +1,17 @@
 import matplotlib
 from matplotlib import pyplot as plt
+import os
 import PySimpleGUI as sg
+from webbrowser import open_new_tab
 
 matplotlib.use('TkAgg')
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from src import core
+
+
+ROOT_PATH = os.getcwd()
 
 
 class Interface:
@@ -16,6 +21,7 @@ class Interface:
         self.datafile = None
         self.statistics = None
         self.plots = None
+        self.inter_plots = None
         self.figure = None
         self.figure_index = -1
     
@@ -36,7 +42,8 @@ class Interface:
         right = sg.Column([
             [sg.Canvas(size=(500, 500), key='Canvas')],
             [sg.Button("Graphique précédent", disabled=True, key='Previous'),
-             sg.Button("Graphique suivant", disabled=True, key='Next')]
+             sg.Button("Graphique suivant", disabled=True, key='Next')],
+            [sg.Button("Carte interactive", disabled=True, key='Interactive')]
         ])
         
         layout = [[left, right]]
@@ -77,7 +84,8 @@ class Interface:
             if event == 'Run':
                 self.window['Previous'].update(disabled=False)
                 self.window['Next'].update(disabled=False)
-                self.statistics, self.plots = core.run(
+                self.window['Interactive'].update(disabled=False)
+                self.statistics, self.plots, self.inter_plots = core.run(
                     self.datafile)
                 self.show_statistics()
                 self.figure_index = 0
@@ -88,14 +96,19 @@ class Interface:
                 if self.figure_index < 0:
                     self.figure_index = 0
                 else:
-                    self.show_individual_result()
+                    self.show_current_figure()
             
             if event == 'Next':
                 self.figure_index += 1
                 if self.figure_index > len(self.plots) - 1:
                     self.figure_index = len(self.plots) - 1
                 else:
-                    self.show_individual_result()
+                    self.show_current_figure()
+            
+            if event == 'Interactive':
+                url = 'data/cities.html'
+                self.inter_plots[0].save(url)
+                open_new_tab('/'.join([ROOT_PATH, url]))
         
         self.window.close()
 

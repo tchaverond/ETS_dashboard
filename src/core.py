@@ -153,6 +153,8 @@ def run(new_path):
     stats = compute_stats(data)
     visits = count_visits(data)
     plots = []
-    plots.append(plot_visited_cities_interactive(coords=visits, bg=bg))
+    plots.append(plot_visited_cities(coords=visits, bg=bg))
+    inter_plots = []
+    inter_plots.append(plot_visited_cities_interactive(coords=visits, bg=bg))
     # plots.append(plot_routes(coords))
-    return stats, plots
+    return stats, plots, inter_plots
