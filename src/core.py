@@ -2,14 +2,19 @@ import geopandas as gpd
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from matplotlib import pyplot as plt
+import os
 import pandas as pd
 
 
 
-GEOLOC_PATH = "data/geoloc_cities.csv"
-EXISTING_DATA_PATH = "data/consolidated.csv"
-SAMPLE_DATA_PATH = "data/sample.csv"
-BACKGROUND_PATH = "data/NUTS_RG_20M_2021_4326.shp.zip"
+if os.path.exists("data/"):
+    PREFIX = "data/"
+else:
+    PREFIX = "_internal/data/"
+GEOLOC_PATH = PREFIX + "geoloc_cities.csv"
+EXISTING_DATA_PATH = PREFIX + "consolidated.csv"
+SAMPLE_DATA_PATH = PREFIX + "sample.csv"
+BACKGROUND_PATH = PREFIX + "NUTS_RG_20M_2021_4326.shp.zip"
 EUROPE_LIMIT_COORDS = [-12, 30, 35, 65]
 
 

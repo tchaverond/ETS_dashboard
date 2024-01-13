@@ -106,7 +106,10 @@ class Interface:
                     self.show_current_figure()
             
             if event == 'Interactive':
-                url = 'data/cities.html'
+                if os.path.exists("data/"):
+                    url = "data/cities.html"
+                else:
+                    url = "_internal/data/cities.html"
                 self.inter_plots[0].save(url)
                 open_new_tab('/'.join([ROOT_PATH, url]))
         

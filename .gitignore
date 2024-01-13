@@ -1,3 +1,6 @@
 __pycache__
+build/
+dist/
 test_data/
+data/consolidated.csv
 *.html
