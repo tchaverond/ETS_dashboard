@@ -26,9 +26,9 @@ def load_geoloc():
 
 def load_existing_routes():
     try:
-        return pd.read_csv(EXISTING_DATA_PATH, parse_dates=[20])
+        return pd.read_csv(EXISTING_DATA_PATH, parse_dates=[21])
     except FileNotFoundError:
-        return pd.read_csv(SAMPLE_DATA_PATH, parse_dates=[20])
+        return pd.read_csv(SAMPLE_DATA_PATH, parse_dates=[21])
 
 
 def initialize_background():
@@ -40,7 +40,7 @@ def geoloc_unknown_cities(known_geoloc, cities):
     
     geolocator = Nominatim(user_agent="ets-dashboard")
     geocode = partial(RateLimiter(geolocator.geocode, min_delay_seconds=1),
-                      viewbox=((35,65), (-12,30)), bounded=True)
+                      viewbox=((35,-12), (65,30)), bounded=True)
 
     geoloc_out = pd.DataFrame(cities, columns=['City'])
     all_lats = []
@@ -57,8 +57,7 @@ def geoloc_unknown_cities(known_geoloc, cities):
 
 def load_and_append_extra_routes(existing, new_path):
     
-    routes = pd.read_csv(new_path, parse_dates=[20])
-    # remove duplicates if the submitted file has routes that we already know of
+    routes = pd.read_csv(new_path, parse_dates=[21])
     for col in ['Distance planifiée', 'Distance acceptée', 'Ravitaillé',
                 'Coût du carburant', 'Vitesse maximale atteinte']:
         routes[col] = routes[col].str.split(' ').str[:-1].str.join('').astype(int)
@@ -79,6 +78,7 @@ def load_and_append_extra_routes(existing, new_path):
     routes = routes.merge(geoloc, how='left', left_on='Vers', right_on='City', suffixes=('_from', '_to'))
     
     routes = pd.concat([existing, routes], axis=0).reset_index(drop=True)
+    # remove duplicates if the submitted file has routes that we already know of
     routes = routes.drop_duplicates()
     routes.to_csv(EXISTING_DATA_PATH, index=False)
     
@@ -158,7 +158,7 @@ def plot_routes_interactive(routes):
     gpd_routes['Date'] = gpd_routes['Date'].dt.strftime('%d/%m/%Y')
     fig = gpd_routes.explore(
         tooltip=['City_from', 'City_to'],
-        popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date_str'])
+        popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date'])
     return fig
 
 
