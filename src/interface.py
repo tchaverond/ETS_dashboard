@@ -43,7 +43,8 @@ class Interface:
             [sg.Canvas(size=(500, 500), key='Canvas')],
             [sg.Button("Graphique précédent", disabled=True, key='Previous'),
              sg.Button("Graphique suivant", disabled=True, key='Next')],
-            [sg.Button("Carte interactive", disabled=True, key='Interactive')]
+            [sg.Button("Carte interactive des villes", disabled=True, key='Inter_cities'),
+             sg.Button("Carte interactive des trajets", disabled=True, key='Inter_routes')]
         ])
         
         layout = [[left, right]]
@@ -82,9 +83,8 @@ class Interface:
                 self.datafile = values['Input_data']
             
             if event == 'Run':
-                self.window['Previous'].update(disabled=False)
-                self.window['Next'].update(disabled=False)
-                self.window['Interactive'].update(disabled=False)
+                for obj_name in ['Previous', 'Next', 'Inter_cities', 'Inter_routes']:                
+                    self.window[obj_name].update(disabled=False)
                 self.statistics, self.plots, self.inter_plots = core.run(
                     self.datafile)
                 self.show_statistics()
@@ -105,12 +105,20 @@ class Interface:
                 else:
                     self.show_current_figure()
             
-            if event == 'Interactive':
+            if event == 'Inter_cities':
                 if os.path.exists("data/"):
                     url = "data/cities.html"
                 else:
                     url = "_internal/data/cities.html"
                 self.inter_plots[0].save(url)
+                open_new_tab('/'.join([ROOT_PATH, url]))
+            
+            if event == 'Inter_routes':
+                if os.path.exists("data/"):
+                    url = "data/routes.html"
+                else:
+                    url = "_internal/data/routes.html"
+                self.inter_plots[1].save(url)
                 open_new_tab('/'.join([ROOT_PATH, url]))
         
         self.window.close()

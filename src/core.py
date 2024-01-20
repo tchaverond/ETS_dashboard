@@ -5,6 +5,7 @@ from geopy.extra.rate_limiter import RateLimiter
 from matplotlib import pyplot as plt
 import os
 import pandas as pd
+from shapely.geometry import LineString
 
 
 
@@ -126,7 +127,7 @@ def plot_visited_cities(coords, bg):
     gpd_coords = gpd.GeoDataFrame(coords, geometry=gpd.points_from_xy(
         coords['Longitude'], coords['Latitude']), crs='EPSG:4326')
     
-    fig = plt.figure(figsize=(8,8))
+    fig = plt.figure(figsize=(7,7))
     fig.patch.set_facecolor('linen')
     ax = fig.gca()
     bg.plot(ax=ax, color='peru', edgecolor='dimgrey')
@@ -138,7 +139,7 @@ def plot_visited_cities(coords, bg):
     return fig
 
 
-def plot_visited_cities_interactive(coords, bg):
+def plot_visited_cities_interactive(coords):
     
     gpd_coords = gpd.GeoDataFrame(coords, geometry=gpd.points_from_xy(
         coords['Longitude'], coords['Latitude']), crs='EPSG:4326')
@@ -148,8 +149,17 @@ def plot_visited_cities_interactive(coords, bg):
     return fig
 
 
-def plot_routes(coords):
-    pass
+def plot_routes_interactive(routes):
+    
+    routes['geometry'] = routes.apply(lambda row: 
+        LineString([[row['Longitude_from'], row['Latitude_from']],
+                    [row['Longitude_to'], row['Latitude_to']]]), axis=1)
+    gpd_routes = gpd.GeoDataFrame(routes, geometry='geometry', crs='EPSG:4326')
+    gpd_routes['Date'] = gpd_routes['Date'].dt.strftime('%d/%m/%Y')
+    fig = gpd_routes.explore(
+        tooltip=['City_from', 'City_to'],
+        popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date_str'])
+    return fig
 
 
 def run(new_path):
@@ -163,6 +173,7 @@ def run(new_path):
     plots = []
     plots.append(plot_visited_cities(coords=visits, bg=bg))
     inter_plots = []
-    inter_plots.append(plot_visited_cities_interactive(coords=visits, bg=bg))
-    # plots.append(plot_routes(coords))
+    inter_plots.append(plot_visited_cities_interactive(coords=visits))
+    # TODO: regular plot routes
+    inter_plots.append(plot_routes_interactive(data))
     return stats, plots, inter_plots
