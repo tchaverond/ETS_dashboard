@@ -1,3 +1,4 @@
+from functools import partial
 import geopandas as gpd
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
@@ -34,10 +35,11 @@ def initialize_background():
     return bg[bg['LEVL_CODE'] == 0].clip(EUROPE_LIMIT_COORDS)
 
 
-def geoloc_unknown_cities(cities):
+def geoloc_unknown_cities(known_geoloc, cities):
     
     geolocator = Nominatim(user_agent="ets-dashboard")
-    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+    geocode = partial(RateLimiter(geolocator.geocode, min_delay_seconds=1),
+                      viewbox=((35,65), (-12,30)), bounded=True)
 
     geoloc_out = pd.DataFrame(cities, columns=['City'])
     all_lats = []
@@ -48,6 +50,7 @@ def geoloc_unknown_cities(cities):
         all_lons.append(loc.longitude)
     geoloc_out['Latitude'] = all_lats
     geoloc_out['Longitude'] = all_lons
+    geoloc_out = pd.concat([known_geoloc, geoloc_out], axis=0).reset_index(drop=True)
     geoloc_out.to_csv(GEOLOC_PATH, index=False)
 
 
@@ -69,7 +72,7 @@ def load_and_append_extra_data(existing, new_path):
     geoloc = load_geoloc()
     missing_cities = unique_cities.difference(set(geoloc['City'].unique()))
     if len(missing_cities) > 0:
-        geoloc_unknown_cities(missing_cities)
+        geoloc_unknown_cities(geoloc, missing_cities)
         geoloc = load_geoloc()   # reload, after completion
     data = data.merge(geoloc, how='left', left_on='Depuis', right_on='City')
     data = data.merge(geoloc, how='left', left_on='Vers', right_on='City', suffixes=('_from', '_to'))
