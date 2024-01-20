@@ -94,8 +94,12 @@ def compute_stats(routes):
         + str(routes['Depuis'].value_counts().iloc[0])
     stats['Ville d\'arrivée la plus fréquente'] = routes['Vers'].mode()[0] + ' : ' \
         + str(routes['Vers'].value_counts().iloc[0])
+    most_visits = (routes['Depuis'].value_counts() + routes['Vers'].value_counts()).sort_values(
+        ascending=False, na_position='last')
+    stats['Ville la plus visitée'] = most_visits.index[0] + ' : ' \
+        + str(int(most_visits.iloc[0]))
     stats['Chargement le plus fréquent'] = routes['Chargement'].mode()[0] + ' : ' \
-        + str(routes['Chargement'].value_counts().iloc[0])
+        + str(routes['Chargement'].value_counts().iloc[0]) + ' trajets'
     stats['Camion le plus utilisé'] = routes['Camion'].mode()[0] + ' ' + \
         routes['Plaque d\'immatriculation du camion'].mode()[0] + ' : ' \
         + str(routes['Camion'].value_counts().iloc[0]) + ' trajets'
@@ -104,10 +108,12 @@ def compute_stats(routes):
     stats['Distance totale planifiée'] = str(routes['Distance planifiée'].sum()) + ' km'
     stats['Distance totale effectuée'] = str(routes['Distance acceptée'].sum()) + ' km'
     stats['Consommation moyenne'] = str(round(
-        (routes['Consommation moyenne'] * routes['Distance acceptée']).sum() / routes['Distance acceptée'].sum(), 1)) + ' l/100 km'
+        (routes['Consommation moyenne'] * routes['Distance acceptée']).sum() / 
+        routes['Distance acceptée'].sum(), 1)) + ' l/100 km'
     stats['Vitesse maximale'] = str(routes['Vitesse maximale atteinte'].max()) + ' km/h'
     stats['Bénéfice total'] = str(round(routes['Bénéfice'].sum()/10**6, 2)) + ' M€'
     stats['Total des amendes versées'] = str(round(routes['Amendes'].sum()/10**3, 2)) + ' k€'
+    stats['Durée totale en jeu'] = str(round(routes['Temps pris (réel) [s]'].sum()/3600, 1)) + ' h'
     return stats
 
 
@@ -156,9 +162,11 @@ def plot_routes_interactive(routes):
                     [row['Longitude_to'], row['Latitude_to']]]), axis=1)
     gpd_routes = gpd.GeoDataFrame(routes, geometry='geometry', crs='EPSG:4326')
     gpd_routes['Date'] = gpd_routes['Date'].dt.strftime('%d/%m/%Y')
+    gpd_routes['Temps de jeu'] = (gpd_routes['Temps pris (réel) [s]'] // 3600).astype(str) + ' h ' \
+        + ((gpd_routes['Temps pris (réel) [s]'] % 3600)//60).astype(str) + ' min'
     fig = gpd_routes.explore(
         tooltip=['City_from', 'City_to'],
-        popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date'])
+        popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date', 'Temps de jeu'])
     return fig
 
 
