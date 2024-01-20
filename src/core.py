@@ -24,7 +24,7 @@ def load_geoloc():
     return pd.read_csv(GEOLOC_PATH)
 
 
-def load_existing_data():
+def load_existing_routes():
     try:
         return pd.read_csv(EXISTING_DATA_PATH, parse_dates=[20])
     except FileNotFoundError:
@@ -55,68 +55,68 @@ def geoloc_unknown_cities(known_geoloc, cities):
     geoloc_out.to_csv(GEOLOC_PATH, index=False)
 
 
-def load_and_append_extra_data(existing, new_path):
+def load_and_append_extra_routes(existing, new_path):
     
-    data = pd.read_csv(new_path, parse_dates=[20])
+    routes = pd.read_csv(new_path, parse_dates=[20])
     # remove duplicates if the submitted file has routes that we already know of
     for col in ['Distance planifiée', 'Distance acceptée', 'Ravitaillé',
                 'Coût du carburant', 'Vitesse maximale atteinte']:
-        data[col] = data[col].str.split(' ').str[:-1].str.join('').astype(int)
+        routes[col] = routes[col].str.split(' ').str[:-1].str.join('').astype(int)
     for col in ['Bénéfice', 'Amendes']:
-        data[col] = data[col].str.strip('€').str.replace(' ', '').astype(int)
-    data['Masse'] = data['Masse'].str.strip(' kg').str.replace(' ', '').astype(int)
-    data['Consommation moyenne'] = data['Consommation moyenne'].str.split(' ').str[0].astype(float)
-    data['Plaque d\'immatriculation du camion'] = data[
+        routes[col] = routes[col].str.strip('€').str.replace(' ', '').astype(int)
+    routes['Masse'] = routes['Masse'].str.strip(' kg').str.replace(' ', '').astype(int)
+    routes['Consommation moyenne'] = routes['Consommation moyenne'].str.split(' ').str[0].astype(float)
+    routes['Plaque d\'immatriculation du camion'] = routes[
         'Plaque d\'immatriculation du camion'].str.split(':').str[1].str[:-1]
 
-    unique_cities = set(data['Depuis'].unique()).union(set(data['Vers'].unique()))
+    unique_cities = set(routes['Depuis'].unique()).union(set(routes['Vers'].unique()))
     geoloc = load_geoloc()
     missing_cities = unique_cities.difference(set(geoloc['City'].unique()))
     if len(missing_cities) > 0:
         geoloc_unknown_cities(geoloc, missing_cities)
         geoloc = load_geoloc()   # reload, after completion
-    data = data.merge(geoloc, how='left', left_on='Depuis', right_on='City')
-    data = data.merge(geoloc, how='left', left_on='Vers', right_on='City', suffixes=('_from', '_to'))
+    routes = routes.merge(geoloc, how='left', left_on='Depuis', right_on='City')
+    routes = routes.merge(geoloc, how='left', left_on='Vers', right_on='City', suffixes=('_from', '_to'))
     
-    data = pd.concat([existing, data], axis=0).reset_index(drop=True)
-    data = data.drop_duplicates()
-    data.to_csv(EXISTING_DATA_PATH, index=False)
+    routes = pd.concat([existing, routes], axis=0).reset_index(drop=True)
+    routes = routes.drop_duplicates()
+    routes.to_csv(EXISTING_DATA_PATH, index=False)
     
-    return data
+    return routes
 
 
-def compute_stats(data):
+def compute_stats(routes):
     
     stats = {}
-    stats['Trajets pris en compte'] = str(data.shape[0]) + ' trajets du ' + \
-        str(data['Date'].min()).split(' ')[0] + ' au ' + str(data['Date'].max()).split(' ')[0]
-    stats['Ville de départ la plus fréquente'] = data['Depuis'].mode()[0] + ' : ' \
-        + str(data['Depuis'].value_counts().iloc[0])
-    stats['Ville d\'arrivée la plus fréquente'] = data['Vers'].mode()[0] + ' : ' \
-        + str(data['Vers'].value_counts().iloc[0])
-    stats['Chargement le plus fréquent'] = data['Chargement'].mode()[0] + ' : ' \
-        + str(data['Chargement'].value_counts().iloc[0])
-    stats['Camion le plus utilisé'] = data['Camion'].mode()[0] + ' ' + \
-        data['Plaque d\'immatriculation du camion'].mode()[0] + ' : ' \
-        + str(data['Camion'].value_counts().iloc[0]) + ' trajets'
-    stats['Chargement le plus lourd'] = str(round(data['Masse'].max()/1000)) + ' T'
-    stats['Masse totale transportée'] = str(round(data['Masse'].sum()/1000)) + ' T'
-    stats['Distance totale planifiée'] = str(data['Distance planifiée'].sum()) + ' km'
-    stats['Distance totale effectuée'] = str(data['Distance acceptée'].sum()) + ' km'
+    stats['Trajets pris en compte'] = str(routes.shape[0]) + ' trajets du ' + \
+        str(routes['Date'].min()).split(' ')[0] + ' au ' + str(routes['Date'].max()).split(' ')[0]
+    stats['Ville de départ la plus fréquente'] = routes['Depuis'].mode()[0] + ' : ' \
+        + str(routes['Depuis'].value_counts().iloc[0])
+    stats['Ville d\'arrivée la plus fréquente'] = routes['Vers'].mode()[0] + ' : ' \
+        + str(routes['Vers'].value_counts().iloc[0])
+    stats['Chargement le plus fréquent'] = routes['Chargement'].mode()[0] + ' : ' \
+        + str(routes['Chargement'].value_counts().iloc[0])
+    stats['Camion le plus utilisé'] = routes['Camion'].mode()[0] + ' ' + \
+        routes['Plaque d\'immatriculation du camion'].mode()[0] + ' : ' \
+        + str(routes['Camion'].value_counts().iloc[0]) + ' trajets'
+    stats['Chargement le plus lourd'] = str(round(routes['Masse'].max()/1000)) + ' T'
+    stats['Masse totale transportée'] = str(round(routes['Masse'].sum()/1000)) + ' T'
+    stats['Distance totale planifiée'] = str(routes['Distance planifiée'].sum()) + ' km'
+    stats['Distance totale effectuée'] = str(routes['Distance acceptée'].sum()) + ' km'
     stats['Consommation moyenne'] = str(round(
-        (data['Consommation moyenne'] * data['Distance acceptée']).sum() / data['Distance acceptée'].sum(), 1)) + ' l/100 km'
-    stats['Vitesse maximale'] = str(data['Vitesse maximale atteinte'].max()) + ' km/h'
-    stats['Bénéfice total'] = str(round(data['Bénéfice'].sum()/10**6, 2)) + ' M€'
-    stats['Total des amendes versées'] = str(round(data['Amendes'].sum()/10**3, 2)) + ' k€'
+        (routes['Consommation moyenne'] * routes['Distance acceptée']).sum() / routes['Distance acceptée'].sum(), 1)) + ' l/100 km'
+    stats['Vitesse maximale'] = str(routes['Vitesse maximale atteinte'].max()) + ' km/h'
+    stats['Bénéfice total'] = str(round(routes['Bénéfice'].sum()/10**6, 2)) + ' M€'
+    stats['Total des amendes versées'] = str(round(routes['Amendes'].sum()/10**3, 2)) + ' k€'
     return stats
 
 
-def count_visits(data):
+def count_visits(routes):
     
     visited = pd.concat(
-        [data[['City_from', 'Latitude_from', 'Longitude_from']].rename(
+        [routes[['City_from', 'Latitude_from', 'Longitude_from']].rename(
             lambda c: c.split('_')[0], axis=1), 
-         data[['City_to', 'Latitude_to', 'Longitude_to']].rename(
+         routes[['City_to', 'Latitude_to', 'Longitude_to']].rename(
              lambda c: c.split('_')[0], axis=1)], 
         axis=0, ignore_index=True)
     return visited.groupby(list(visited.columns)).size().reset_index().rename({0: 'Visits'}, axis=1)
@@ -164,16 +164,16 @@ def plot_routes_interactive(routes):
 
 def run(new_path):
     
-    data = load_existing_data()
+    routes = load_existing_routes()
     bg = initialize_background()
     if new_path is not None:
-        data = load_and_append_extra_data(data, new_path)
-    stats = compute_stats(data)
-    visits = count_visits(data)
+        routes = load_and_append_extra_routes(routes, new_path)
+    stats = compute_stats(routes)
+    visits = count_visits(routes)
     plots = []
     plots.append(plot_visited_cities(coords=visits, bg=bg))
     inter_plots = []
     inter_plots.append(plot_visited_cities_interactive(coords=visits))
     # TODO: regular plot routes
-    inter_plots.append(plot_routes_interactive(data))
+    inter_plots.append(plot_routes_interactive(routes))
     return stats, plots, inter_plots
