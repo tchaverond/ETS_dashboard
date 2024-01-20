@@ -150,13 +150,14 @@ def plot_visited_cities_interactive(coords):
     gpd_coords = gpd.GeoDataFrame(coords, geometry=gpd.points_from_xy(
         coords['Longitude'], coords['Latitude']), crs='EPSG:4326')
     fig = gpd_coords.explore(
-        column='Visits', tooltip=['City', 'Visits'], cmap='viridis', 
+        column='Visits', tooltip=['City', 'Visits'], tiles='CartoDB positron', cmap='viridis', 
         vmax=gpd_coords['Visits'].max()+1, marker_kwds=dict(radius=5, fill=True), legend=True)
     return fig
 
 
 def plot_routes_interactive(routes):
     
+    # TODO: color by month of completion
     routes['geometry'] = routes.apply(lambda row: 
         LineString([[row['Longitude_from'], row['Latitude_from']],
                     [row['Longitude_to'], row['Latitude_to']]]), axis=1)
@@ -165,7 +166,7 @@ def plot_routes_interactive(routes):
     gpd_routes['Temps de jeu'] = (gpd_routes['Temps pris (réel) [s]'] // 3600).astype(str) + ' h ' \
         + ((gpd_routes['Temps pris (réel) [s]'] % 3600)//60).astype(str) + ' min'
     fig = gpd_routes.explore(
-        tooltip=['City_from', 'City_to'],
+        tooltip=['City_from', 'City_to'], tiles='CartoDB positron',
         popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date', 'Temps de jeu'])
     return fig
 
