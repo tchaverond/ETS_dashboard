@@ -43,8 +43,8 @@ class Interface:
     
         right = sg.Column([
             [sg.Canvas(size=(500, 500), key='Canvas')],
-            [sg.Button("Graphique précédent", disabled=True, key='Previous'),
-             sg.Button("Graphique suivant", disabled=True, key='Next')],
+            # [sg.Button("Graphique précédent", disabled=True, key='Previous'),
+            #  sg.Button("Graphique suivant", disabled=True, key='Next')],
             [sg.Button("Carte interactive des villes", disabled=True, key='Inter_cities'),
              sg.Button("Carte interactive des trajets", disabled=True, key='Inter_routes')]
         ])
@@ -85,7 +85,7 @@ class Interface:
                 self.datafile = values['Input_data']
             
             if event == 'Run':
-                for obj_name in ['Previous', 'Next', 'Inter_cities', 'Inter_routes']:                
+                for obj_name in ['Inter_cities', 'Inter_routes']:                
                     self.window[obj_name].update(disabled=False)
                 self.statistics, self.plots, self.inter_plots = core.run(
                     self.datafile)
@@ -93,19 +93,19 @@ class Interface:
                 self.figure_index = 0
                 self.show_current_figure()
 
-            if event == 'Previous':
-                self.figure_index -= 1
-                if self.figure_index < 0:
-                    self.figure_index = 0
-                else:
-                    self.show_current_figure()
+            # if event == 'Previous':
+            #     self.figure_index -= 1
+            #     if self.figure_index < 0:
+            #         self.figure_index = 0
+            #     else:
+            #         self.show_current_figure()
             
-            if event == 'Next':
-                self.figure_index += 1
-                if self.figure_index > len(self.plots) - 1:
-                    self.figure_index = len(self.plots) - 1
-                else:
-                    self.show_current_figure()
+            # if event == 'Next':
+            #     self.figure_index += 1
+            #     if self.figure_index > len(self.plots) - 1:
+            #         self.figure_index = len(self.plots) - 1
+            #     else:
+            #         self.show_current_figure()
             
             if event == 'Inter_cities':
                 if os.path.exists("data/"):
