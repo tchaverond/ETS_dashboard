@@ -157,16 +157,17 @@ def plot_visited_cities_interactive(coords):
 
 def plot_routes_interactive(routes):
     
-    # TODO: color by month of completion
     routes['geometry'] = routes.apply(lambda row: 
         LineString([[row['Longitude_from'], row['Latitude_from']],
                     [row['Longitude_to'], row['Latitude_to']]]), axis=1)
     gpd_routes = gpd.GeoDataFrame(routes, geometry='geometry', crs='EPSG:4326')
+    gpd_routes['Mois'] = gpd_routes['Date'].dt.strftime('%Y/%m - %b')
     gpd_routes['Date'] = gpd_routes['Date'].dt.strftime('%d/%m/%Y')
     gpd_routes['Temps de jeu'] = (gpd_routes['Temps pris (réel) [s]'] // 3600).astype(str) + ' h ' \
         + ((gpd_routes['Temps pris (réel) [s]'] % 3600)//60).astype(str) + ' min'
     fig = gpd_routes.explore(
-        tooltip=['City_from', 'City_to'], tiles='CartoDB positron',
+        column='Mois', tooltip=['City_from', 'City_to'], tiles='CartoDB positron',
+        cmap='tab20', legend=True, style_kwds=dict(opacity=0.8),
         popup=['Depuis', 'Vers', 'Chargement', 'Masse', 'Distance acceptée', 'Camion', 'Date', 'Temps de jeu'])
     return fig
 

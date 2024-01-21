@@ -30,6 +30,7 @@ class Interface:
         
         sg.theme(theme)
         left = sg.Column([
+            # TODO: add multiple files
             [sg.FileBrowse("Ajouter un fichier de trajets", target='Input_data'),
              sg.In(key='Input_data', enable_events=True)],
             [sg.Button("Actualiser", key='Run')],
@@ -37,6 +38,7 @@ class Interface:
                       [[sg.Multiline(size=(70,20), auto_size_text=True, expand_y=True, 
                                      write_only=True, key='Stats')
                         ]])]
+            # TODO: delete existing database
         ])
     
         right = sg.Column([
