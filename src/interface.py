@@ -37,8 +37,8 @@ class Interface:
             [sg.Frame("Statistiques :", 
                       [[sg.Multiline(size=(70,20), auto_size_text=True, expand_y=True, 
                                      write_only=True, key='Stats')
-                        ]])]
-            # TODO: delete existing database
+                        ]])],
+            [sg.Button("Supprimer la base de données interne", key='Reset')]
         ])
     
         right = sg.Column([
@@ -83,6 +83,9 @@ class Interface:
             
             if event == 'Input_data':
                 self.datafile = values['Input_data']
+            
+            if event == 'Reset':
+                core.reset_db()
             
             if event == 'Run':
                 for obj_name in ['Inter_cities', 'Inter_routes']:                

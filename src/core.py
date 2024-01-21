@@ -187,3 +187,12 @@ def run(new_path):
     # TODO: regular plot routes
     inter_plots.append(plot_routes_interactive(routes))
     return stats, plots, inter_plots
+
+
+def reset_db():
+    
+    try:
+        os.remove(EXISTING_DATA_PATH)
+    except FileNotFoundError:
+        pass
+    return
